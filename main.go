@@ -129,12 +129,14 @@ func run() error {
 
 	common.Info(common.CmdToString(cmd))
 
-	err = cmd.Run()
+	if !*dry {
+		err = cmd.Run()
 
-	common.Info("Time needed: %v", time.Since(start))
+		common.Info("Time needed: %v", time.Since(start))
 
-	if common.Error(err) {
-		return err
+		if common.Error(err) {
+			return err
+		}
 	}
 
 	return nil
