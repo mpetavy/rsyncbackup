@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	common.Init("", "", "", "", "", "", "", "", &resources, nil, nil, run, 0)
+	common.Init("", "", "", "", "Create incremental backups with RSYNC", "", "", "", &resources, nil, nil, run, 0)
 }
 
 func checkRsync() (string, error) {
@@ -45,7 +45,7 @@ func checkPath(path string) error {
 }
 
 func backupName(gen int) string {
-	return fmt.Sprintf("%s_backup_%03d", filepath.Base(*sourcePath), gen)
+	return fmt.Sprintf("%s-Backup-%03d", filepath.Base(*sourcePath), gen)
 }
 
 func run() error {
@@ -112,17 +112,17 @@ func run() error {
 	source := fmt.Sprintf("%s%s", *sourcePath, string(os.PathSeparator))
 	dest := filepath.Join(*destPath, backupName(1))
 
-	list := []string{}
+	args := []string{}
 
-	list = append(list, "--archive", "--safe-links", "--delete")
+	args = append(args, "--archive", "--verbose", "--safe-links", "--delete")
 
 	if common.FileExists(link) {
-		list = append(list, fmt.Sprintf("--link-dest=%s", link))
+		args = append(args, fmt.Sprintf("--link-dest=%s", link))
 	}
 
-	list = append(list, source, dest)
+	args = append(args, source, dest)
 
-	cmd := exec.Command(rsyncPath, list...)
+	cmd := exec.Command(rsyncPath, args...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -131,7 +131,7 @@ func run() error {
 
 	err = cmd.Run()
 
-	common.Info("time needed: %v", time.Since(start))
+	common.Info("Time needed: %v", time.Since(start))
 
 	if common.Error(err) {
 		return err
