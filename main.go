@@ -19,7 +19,7 @@ var resources embed.FS
 var (
 	sourcePath = flag.String("s", "", "source directory")
 	destPath   = flag.String("d", "", "destination directory")
-	countGen   = flag.Int("c", 3, "number of backup generations")
+	countGen   = flag.Int("c", 0, "number of backup generations")
 	dry        = flag.Bool("n", false, "dry run")
 )
 
@@ -72,13 +72,21 @@ func run() error {
 		*destPath = (*destPath)[:len(*destPath)-1]
 	}
 
+	prefix := ""
+	if *dry {
+		prefix = "Would "
+	}
+
+	start := time.Now()
+	b := false
+
 	for i := *countGen; ; i++ {
 		path := filepath.Join(*destPath, backupName(i))
 		if !common.FileExists(path) {
 			break
 		}
 
-		common.Info("Remove obsolete path: %s", path)
+		common.Info("%sRemove obsolete path: %s", prefix, path)
 
 		if !*dry {
 			err := os.RemoveAll(path)
@@ -86,7 +94,15 @@ func run() error {
 				return err
 			}
 		}
+
+		b = true
 	}
+
+	if b {
+		common.Info("")
+	}
+
+	b = false
 
 	for i := *countGen - 1; i >= 1; i-- {
 		oldPath := filepath.Join(*destPath, backupName(i))
@@ -96,7 +112,7 @@ func run() error {
 			continue
 		}
 
-		common.Info("Move %s to %s", oldPath, newPath)
+		common.Info("%sMove %s to %s", prefix, oldPath, newPath)
 
 		if !*dry {
 			err := os.Rename(oldPath, newPath)
@@ -104,9 +120,13 @@ func run() error {
 				return err
 			}
 		}
+
+		b = true
 	}
 
-	start := time.Now()
+	if b {
+		common.Info("")
+	}
 
 	link := fmt.Sprintf("%s%s", filepath.Join(*destPath, backupName(2)), string(os.PathSeparator))
 	source := fmt.Sprintf("%s%s", *sourcePath, string(os.PathSeparator))
@@ -127,11 +147,12 @@ func run() error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	common.Info(common.CmdToString(cmd))
+	common.Info("%sExecute rsync: %s", prefix, common.CmdToString(cmd))
 
 	if !*dry {
 		err = cmd.Run()
 
+		common.Info("")
 		common.Info("Time needed: %v", time.Since(start))
 
 		if common.Error(err) {
@@ -143,5 +164,5 @@ func run() error {
 }
 
 func main() {
-	common.Run([]string{"s", "d"})
+	common.Run([]string{"s", "d", "c"})
 }
