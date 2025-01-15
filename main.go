@@ -49,6 +49,8 @@ func backupName(gen int) string {
 }
 
 func run() error {
+	start := time.Now()
+
 	rsyncPath, err := checkRsync()
 	if common.Error(err) {
 		return err
@@ -77,7 +79,6 @@ func run() error {
 		prefix = "Would "
 	}
 
-	start := time.Now()
 	b := false
 
 	for i := *countGen; ; i++ {
@@ -155,6 +156,11 @@ func run() error {
 		common.Info("")
 		common.Info("Time needed: %v", time.Since(start))
 
+		if common.Error(err) {
+			return err
+		}
+
+		err := os.Chtimes(dest, start, start)
 		if common.Error(err) {
 			return err
 		}
