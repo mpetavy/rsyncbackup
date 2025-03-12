@@ -3,7 +3,7 @@ module rsyncbackup
 go 1.23.2
 
 require (
-	github.com/mpetavy/common v1.9.95
+	github.com/mpetavy/common v1.9.96
 	github.com/pkg/errors v0.9.1
 )
 
